@@ -41,6 +41,23 @@ npx expo start       # press i (iOS), a (Android), or w (web)
 `npx expo install react-native-safe-area-context` so the native module matches
 your Expo runtime.
 
+## Troubleshooting
+
+**`Property 'DOMRect' doesn't exist`** — Hermes doesn't define the browser
+`DOMRect` global that some libraries reference. `src/polyfills.js` defines it
+and is imported first in `index.js`, so this is handled. If you still see it,
+you're almost certainly running a stale bundle — do a clean reinstall and clear
+the Metro cache:
+
+```bash
+rm -rf node_modules package-lock.json .expo
+npm install
+npx expo start -c
+```
+
+(If you were running the earlier downloaded zip, use this branch's code instead —
+the zip predates this fix.)
+
 ## Notes
 
 The model is drawn as a stylised wireframe "building" box to match the
