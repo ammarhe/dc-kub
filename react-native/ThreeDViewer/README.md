@@ -4,10 +4,11 @@ A **React Native (Expo)** implementation of the *3D Model Viewer* iOS prototype
 imported from Claude Design (`3D Viewer App.dc.html`).
 
 **Why Expo:** the app is self-contained UI with no custom native modules, so
-Expo gives zero-config `npx expo start` on iOS / Android / web, and the only
-extra dependency — `react-native-svg` (for the wireframe model, dotted grid,
-and measure overlay) — is an Expo-supported package. Nothing here needs the
-bare/native workflow.
+Expo gives zero-config `npx expo start` on iOS / Android / web. The wireframe
+model, dotted grid, and measure overlay are drawn with plain React Native
+`View`s + transforms (a rotated-View `Line` primitive), so there is **no SVG /
+canvas dependency** — the only extra package is `react-native-safe-area-context`,
+which ships with Expo. Nothing here needs the bare/native workflow.
 
 ## Features (1:1 with the design)
 
@@ -16,7 +17,7 @@ bare/native workflow.
 | **My Models** library (title, `+`, count, search, file rows, format badges) | `src/screens/LibraryScreen.js` |
 | **Import** bottom sheet (Files / iCloud / AirDrop + supported formats) | `src/sheets/ImportSheet.js` |
 | **Viewer** top bar (back, title, Info, Share) | `src/screens/ViewerScreen.js` |
-| 3D wireframe model on a dotted grid | `src/viewer/Model3D.js`, `src/viewer/DotGrid.js` (SVG) |
+| 3D wireframe model on a dotted grid | `src/viewer/Model3D.js`, `src/viewer/DotGrid.js` (plain Views) |
 | **Orbit / Pan / Zoom** via drag | `PanResponder` → `orbit/pan/pinchZoom` |
 | **Measure** tool (tap two points → dashed line + distance + Clear) | `src/viewer/MeasureOverlay.js` |
 | Tool pills + **Reset View** | bottom bar in `ViewerScreen` |
@@ -37,8 +38,8 @@ npx expo start       # press i (iOS), a (Android), or w (web)
 ```
 
 `npm install` pins Expo SDK 51 versions. If you use a different SDK, run
-`npx expo install react-native-svg react-native-safe-area-context` so the
-native modules match your Expo runtime.
+`npx expo install react-native-safe-area-context` so the native module matches
+your Expo runtime.
 
 ## Notes
 

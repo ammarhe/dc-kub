@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import Svg, { Line, Polygon } from 'react-native-svg';
+import { View } from 'react-native';
+import Line from '../components/Line';
 import { accentAlpha } from '../theme';
 
 // Box half-extents (width 160, height 220, depth 160 in the source).
@@ -31,7 +32,7 @@ function projectFactory({ rotX, rotY, zoom, panX, panY, cx, cy }) {
 const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
 
 export default function Model3D({ width, height, rotX, rotY, zoom, panX, panY }) {
-  const { corners, floorRings, topFace, botFace, edges } = useMemo(() => {
+  const { edges, floorEdges } = useMemo(() => {
     const project = projectFactory({ rotX, rotY, zoom, panX, panY, cx: width / 2, cy: height / 2 });
 
     const C = [
@@ -39,51 +40,33 @@ export default function Model3D({ width, height, rotX, rotY, zoom, panX, panY })
       [-HW, -HH, -HD], [HW, -HH, -HD], [HW, HH, -HD], [-HW, HH, -HD],
     ].map(project);
 
-    const topRing = [C[0], C[1], C[5], C[4]];
-    const botRing = [C[3], C[2], C[6], C[7]];
-    const rings = [];
-    for (let f = 1; f < FLOORS; f++) {
-      const t = f / FLOORS;
-      rings.push(topRing.map((p, i) => lerp(p, botRing[i], t)));
-    }
-
     const edgePairs = [
       [0, 1], [1, 2], [2, 3], [3, 0],
       [4, 5], [5, 6], [6, 7], [7, 4],
       [0, 4], [1, 5], [2, 6], [3, 7],
-    ];
+    ].map(([i, j]) => [C[i], C[j]]);
 
-    return {
-      corners: C,
-      floorRings: rings,
-      topFace: [C[0], C[1], C[5], C[4]],
-      botFace: [C[3], C[2], C[6], C[7]],
-      edges: edgePairs,
-    };
+    // Floor divisions: interpolate the top ring toward the bottom ring.
+    const topRing = [C[0], C[1], C[5], C[4]];
+    const botRing = [C[3], C[2], C[6], C[7]];
+    const floors = [];
+    for (let f = 1; f < FLOORS; f++) {
+      const t = f / FLOORS;
+      const ring = topRing.map((p, i) => lerp(p, botRing[i], t));
+      for (let i = 0; i < 4; i++) floors.push([ring[i], ring[(i + 1) % 4]]);
+    }
+
+    return { edges: edgePairs, floorEdges: floors };
   }, [width, height, rotX, rotY, zoom, panX, panY]);
 
-  const pts = (ring) => ring.map((p) => `${p[0]},${p[1]}`).join(' ');
-
   return (
-    <Svg width={width} height={height} style={{ position: 'absolute', top: 0, left: 0 }} pointerEvents="none">
-      {/* Faint top / bottom face fills */}
-      <Polygon points={pts(topFace)} fill={accentAlpha(0.06)} />
-      <Polygon points={pts(botFace)} fill={accentAlpha(0.1)} />
-
-      {/* Floor divisions */}
-      {floorRings.map((ring, i) => (
-        <Polygon key={`floor-${i}`} points={pts(ring)} fill="none" stroke={accentAlpha(0.22)} strokeWidth={1} />
+    <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, width, height }}>
+      {floorEdges.map(([a, b], i) => (
+        <Line key={`floor-${i}`} a={a} b={b} color={accentAlpha(0.22)} width={1} />
       ))}
-
-      {/* Cube edges */}
       {edges.map(([a, b], i) => (
-        <Line
-          key={`edge-${i}`}
-          x1={corners[a][0]} y1={corners[a][1]}
-          x2={corners[b][0]} y2={corners[b][1]}
-          stroke={accentAlpha(0.6)} strokeWidth={1.5}
-        />
+        <Line key={`edge-${i}`} a={a} b={b} color={accentAlpha(0.6)} width={1.5} />
       ))}
-    </Svg>
+    </View>
   );
 }

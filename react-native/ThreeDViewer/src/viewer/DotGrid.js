@@ -1,18 +1,38 @@
-import React from 'react';
-import Svg, { Defs, Pattern, Circle, Rect } from 'react-native-svg';
+import React, { useMemo } from 'react';
+import { View } from 'react-native';
 import { Theme } from '../theme';
 
-// Dotted grid the model sits on (radial-dot background from the source).
+const STEP = 22;
+const DOT = 2;
+
+// Dotted grid the model sits on, built from plain Views (no SVG).
 export default function DotGrid({ width, height }) {
+  const dots = useMemo(() => {
+    const out = [];
+    for (let y = 0; y < height; y += STEP) {
+      for (let x = 0; x < width; x += STEP) {
+        out.push({ x, y });
+      }
+    }
+    return out;
+  }, [width, height]);
+
   return (
-    <Svg width={width} height={height} style={{ position: 'absolute', top: 0, left: 0 }} pointerEvents="none">
-      <Defs>
-        <Pattern id="dots" width={22} height={22} patternUnits="userSpaceOnUse">
-          <Circle cx={1} cy={1} r={1} fill={Theme.gridDot} />
-        </Pattern>
-      </Defs>
-      <Rect x={0} y={0} width={width} height={height} fill={Theme.canvasBG} />
-      <Rect x={0} y={0} width={width} height={height} fill="url(#dots)" />
-    </Svg>
+    <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, width, height, backgroundColor: Theme.canvasBG }}>
+      {dots.map((d, i) => (
+        <View
+          key={i}
+          style={{
+            position: 'absolute',
+            left: d.x,
+            top: d.y,
+            width: DOT,
+            height: DOT,
+            borderRadius: DOT / 2,
+            backgroundColor: Theme.gridDot,
+          }}
+        />
+      ))}
+    </View>
   );
 }
