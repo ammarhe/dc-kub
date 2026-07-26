@@ -43,6 +43,35 @@ your Expo runtime.
 
 ## Troubleshooting
 
+**`SyntaxError: private properties are not supported`** (or any error whose
+stack points at `setUpDefaultReactNativeEnvironment` / React Native's own
+`hermes-stable` modules) — this is **not** an app-code error. It means the
+Expo SDK the project is pinned to doesn't match the Hermes engine in your
+**Expo Go** app. Expo Go runs only one SDK version, so an old pin against a
+newer Expo Go (or vice-versa) crashes while parsing RN's own runtime.
+
+Fix — align the project to the latest SDK (matches an up-to-date Expo Go):
+
+```bash
+cd react-native/ThreeDViewer
+./align-sdk.sh
+```
+
+or do it manually:
+
+```bash
+rm -rf node_modules package-lock.json .expo
+npm install expo@latest
+npx expo install --fix                              # aligns react / react-native
+npx expo install react-native-safe-area-context
+npx expo start -c
+```
+
+Make sure the **Expo Go** app on your phone is updated to the latest version
+from the App Store / Play Store too. (Alternatively, run on a simulator, which
+uses the SDK the project resolves to rather than the store's Expo Go.)
+
+
 **`Property 'DOMRect' doesn't exist`** — Hermes doesn't define the browser
 `DOMRect` global that some libraries reference. `src/polyfills.js` defines it
 and is imported first in `index.js`, so this is handled. If you still see it,
